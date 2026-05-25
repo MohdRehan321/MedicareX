@@ -1,9 +1,11 @@
 package com.hospital.system.medicarex.model;
 
+import com.hospital.system.medicarex.enums.AppointmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @AllArgsConstructor
@@ -18,6 +20,14 @@ public class Appointment {
 
     @Column(nullable = false)
     private LocalDateTime appointmentDate;
+
+    @Column(nullable = false)
+    private LocalTime appointmentTime;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AppointmentStatus status = AppointmentStatus.PENDING;
+
 
     @Column(length = 100)
     private String reason;

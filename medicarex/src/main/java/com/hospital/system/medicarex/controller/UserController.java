@@ -1,41 +1,61 @@
 package com.hospital.system.medicarex.controller;
 
-import com.hospital.system.medicarex.dto.UserDTO;
-import com.hospital.system.medicarex.service.UserService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.hospital.system.medicarex.dto.DashboardStatsDTO;
+import com.hospital.system.medicarex.enums.AppointmentStatus;
+import com.hospital.system.medicarex.enums.Role;
+import com.hospital.system.medicarex.repository.AppointmentRepository;
+import com.hospital.system.medicarex.repository.DoctorRepository;
+import com.hospital.system.medicarex.repository.PatientRepository;
+import com.hospital.system.medicarex.repository.UserRepository;
+import com.hospital.system.medicarex.service.AppointmentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+@Controller
+@RequestMapping("/admin")
+@PreAuthorize("hasRole('ADMIN')")
+@RequiredArgsConstructor
+public class AdminController {
 
-@RestController
-@RequestMapping("/api/users")
-public class UserController {
+    private final UserRepository userRepository;
+    private final DoctorRepository doctorRepository;
+    private final PatientRepository patientRepository;
+    private final AppointmentRepository appointmentRepository;
+    private final AppointmentService appointmentService;
 
-    private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        DashboardStatsDTO stats = new DashboardStatsDTO(
+                userRepository.countByRole(Role.ROLE_DOCTOR),
+                userRepository.countByRole(Role.ROLE_PATIENT),
+                appointmentRepository.count(),
+                appointmentRepository.countByStatus(AppointmentStatus.PENDING),
+                appointmentRepository.countByStatus(AppointmentStatus.COMPLETED)
+        );
+        model.addAttribute("stats", stats);
+        model.addAttribute("recentAppointments",
+                appointmentService.getAll().stream().limit(10).toList());
+        return "admin/dashboard";
     }
 
-    @PostMapping
-    public ResponseEntity<UserDTO> create(@RequestBody UserDTO userDTO) {
-        return new ResponseEntity<>(userService.addUser(userDTO), HttpStatus.CREATED);
+    @GetMapping("/doctors")
+    public String manageDoctors(Model model) {
+        model.addAttribute("doctors", doctorRepository.findAll());
+        return "admin/doctors";
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDTO> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("/patients")
+    public String managePatients(Model model) {
+        model.addAttribute("patients", patientRepository.findAll());
+        return "admin/patients";
     }
 
-    @GetMapping
-    public ResponseEntity<List<UserDTO>> getAll() {
-        return ResponseEntity.ok(userService.getAllUsers());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+    @PostMapping("/doctors/delete/{id}")
+    public String deleteDoctor(@PathVariable Long id) {
+        doctorRepository.deleteById(id);
+        return "redirect:/admin/doctors";
     }
 }

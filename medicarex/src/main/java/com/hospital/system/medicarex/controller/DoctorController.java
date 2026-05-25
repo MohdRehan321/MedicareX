@@ -1,56 +1,56 @@
 package com.hospital.system.medicarex.controller;
 
-import com.hospital.system.medicarex.dto.DoctorDTO;
-import com.hospital.system.medicarex.service.DoctorService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.hospital.system.medicarex.enums.AppointmentStatus;
+import com.hospital.system.medicarex.model.Doctor;
+import com.hospital.system.medicarex.repository.DoctorRepository;
+import com.hospital.system.medicarex.repository.UserRepository;
+import com.hospital.system.medicarex.service.AppointmentService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@RestController
-@RequestMapping("/api/doctors")
+@Controller
+@RequestMapping("/doctor")
+@PreAuthorize("hasRole('DOCTOR')")
+@RequiredArgsConstructor
 public class DoctorController {
 
-    private final DoctorService doctorService;
+    private final DoctorRepository doctorRepository;
+    private final UserRepository userRepository;
+    private final AppointmentService appointmentService;
 
-    public DoctorController(DoctorService doctorService) {
-        this.doctorService = doctorService;
+    @GetMapping("/dashboard")
+    public String dashboard(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        Doctor doctor = getDoctorFromPrincipal(userDetails);
+        model.addAttribute("doctor", doctor);
+        model.addAttribute("appointments", appointmentService.getByDoctor(doctor));
+        model.addAttribute("pendingCount",
+                appointmentService.getByDoctor(doctor).stream()
+                        .filter(a -> a.getStatus() == AppointmentStatus.PENDING).count());
+        return "doctor/dashboard";
     }
 
-    @PostMapping("/user/{userId}")
-    public ResponseEntity<DoctorDTO> create(
-            @PathVariable Long userId,
-            @RequestBody DoctorDTO dto) {
-
-        return new ResponseEntity<>(
-                doctorService.createDoctor(userId, dto),
-                HttpStatus.CREATED);
+    @GetMapping("/appointments")
+    public String appointments(@AuthenticationPrincipal UserDetails userDetails, Model model) {
+        Doctor doctor = getDoctorFromPrincipal(userDetails);
+        model.addAttribute("appointments", appointmentService.getByDoctor(doctor));
+        return "doctor/appointments";
     }
 
-    @GetMapping
-    public ResponseEntity<List<DoctorDTO>> getAll(){
-        return ResponseEntity.ok(doctorService.getAllDoctors());
+    @PostMapping("/appointments/{id}/status")
+    public String updateStatus(@PathVariable Long id,
+                               @RequestParam AppointmentStatus status) {
+        appointmentService.updateStatus(id, status);
+        return "redirect:/doctor/appointments";
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<DoctorDTO> getById(@PathVariable Long id){
-        return ResponseEntity.ok(doctorService.getDoctor(id));
+    private Doctor getDoctorFromPrincipal(UserDetails userDetails) {
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow();
+        return doctorRepository.findByUser(user).orElseThrow();
     }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<DoctorDTO> update(
-            @PathVariable Long id,
-            @Valid @RequestBody DoctorDTO dto){
-        return ResponseEntity.ok(
-                doctorService.updateDoctor(id, dto));
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
-        doctorService.deleteDoctor(id);
-        return ResponseEntity.noContent().build();
-    }
-
 }
