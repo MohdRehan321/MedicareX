@@ -9,5 +9,8 @@ import java.util.Optional;
 
 @Repository
 public interface DoctorRepository extends JpaRepository<Doctor,Long> {
+        Optional<Doctor> findByUser(User user); // ✅ used in getDoctorFromPrincipal
 }
+
+
 

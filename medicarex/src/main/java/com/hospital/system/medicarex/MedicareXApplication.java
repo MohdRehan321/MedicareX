@@ -8,6 +8,6 @@ public class MedicareXApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MedicareXApplication.class, args);
-	}
 
+	}
 }

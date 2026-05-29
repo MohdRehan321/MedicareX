@@ -32,6 +32,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+
+    @Column(nullable = false)
+    private boolean enabled = true; // Marks if a user can log in or not.
+
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

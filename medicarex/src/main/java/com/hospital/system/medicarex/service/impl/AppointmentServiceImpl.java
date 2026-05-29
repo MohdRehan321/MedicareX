@@ -1,6 +1,7 @@
 package com.hospital.system.medicarex.service.impl;
 
 import com.hospital.system.medicarex.dto.AppointmentDTO;
+import com.hospital.system.medicarex.enums.AppointmentStatus;
 import com.hospital.system.medicarex.exceptions.ResourceNotFoundException;
 import com.hospital.system.medicarex.mapper.AppointmentMapper;
 import com.hospital.system.medicarex.model.Appointment;
@@ -84,4 +85,58 @@ public class AppointmentServiceImpl implements AppointmentService {
         appointmentRepository.save(appointment);
         return AppointmentMapper.toDTO(appointment);
     }
+
+        @Override
+        public List<AppointmentDTO> getByDoctor(Doctor doctor) {
+            return appointmentRepository.findByDoctor(doctor)
+                    .stream()
+                    .map(AppointmentMapper::toDTO)
+                    .toList();
+        }
+
+        @Override
+        public void updateStatus(Long appointmentId, AppointmentStatus status) {
+            Appointment appointment = appointmentRepository.findById(appointmentId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Appointment", "id", appointmentId));
+            appointment.setStatus(status);
+            appointmentRepository.save(appointment);
+        }
+
+    @Override
+    public List<AppointmentDTO> getByPatient(Patient patient) {
+        return appointmentRepository.findByPatient(patient)
+                .stream()
+                .map(AppointmentMapper::toDTO)
+                .toList();
+    }
+
+    @Override
+    public void bookAppointment(AppointmentDTO dto, Patient patient) {
+        Appointment appointment = new Appointment();
+        appointment.setAppointmentDate(dto.getAppointmentDate());
+        appointment.setReason(dto.getReason());
+        appointment.setStatus(AppointmentStatus.PENDING);
+        appointment.setPatient(patient);
+
+        // doctor selection from DTO
+        Doctor doctor = doctorRepository.findById(dto.getDoctorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Doctor", "id", dto.getDoctorId()));
+        appointment.setDoctor(doctor);
+
+        appointmentRepository.save(appointment);
+    }
+
+    @Override
+    public List<AppointmentDTO> getAll() {
+        return appointmentRepository.findAll()
+                .stream()
+                .map(AppointmentMapper::toDTO)
+                .toList();
+    }
 }
+
+
+
+
+
+

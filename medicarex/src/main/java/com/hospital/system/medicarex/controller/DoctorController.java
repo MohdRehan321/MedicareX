@@ -2,6 +2,7 @@ package com.hospital.system.medicarex.controller;
 
 import com.hospital.system.medicarex.enums.AppointmentStatus;
 import com.hospital.system.medicarex.model.Doctor;
+import com.hospital.system.medicarex.model.User;
 import com.hospital.system.medicarex.repository.DoctorRepository;
 import com.hospital.system.medicarex.repository.UserRepository;
 import com.hospital.system.medicarex.service.AppointmentService;
@@ -30,7 +31,7 @@ public class DoctorController {
         model.addAttribute("appointments", appointmentService.getByDoctor(doctor));
         model.addAttribute("pendingCount",
                 appointmentService.getByDoctor(doctor).stream()
-                        .filter(a -> a.getStatus() == AppointmentStatus.PENDING).count());
+                        .filter(a -> a.getStatus() == AppointmentStatus.PENDING));
         return "doctor/dashboard";
     }
 

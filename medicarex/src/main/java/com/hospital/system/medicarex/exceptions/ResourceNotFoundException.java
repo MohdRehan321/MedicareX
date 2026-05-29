@@ -15,4 +15,7 @@ public class ResourceNotFoundException extends RuntimeException {
         this.fieldValue = fieldValue;
 
     }
+    private static final String ENTITY = "Appointment"; // ✅ avoid duplication
+
+
 }

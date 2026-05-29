@@ -36,3 +36,4 @@ public class UserDTO {
     @NotBlank(message = "Role is required")
     private String role; // "DOCTOR" or "PATIENT"
 }
+

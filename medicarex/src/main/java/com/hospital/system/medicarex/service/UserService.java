@@ -5,12 +5,14 @@ import java.util.List;
 
 public interface UserService {
     List<UserDTO> getAllUsers();
-
     UserDTO getUserById(Long id);
-
     UserDTO addUser(UserDTO userDTO);
-
     void deleteUser(Long id);
-}
 
+    // ✅ Use UserDTO consistently
+    void registerUser(UserDTO dto);
+
+    boolean emailExists(String email); // ✅ new method
+
+}
 
